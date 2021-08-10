@@ -227,13 +227,14 @@ def run_model(parameters, time_trace=None):
     netstim.prob = 2.0
     netstim.noise = 1.0
     netstim.number = 1.0
-    
     vclamp = neuron.h.VClamp(0.5, sec=cellprop.soma)
     vclamp.dur[0] = tstop
     vclamp.amp[0] = Vrest
-    
-    with open(filename3) as ff:
-        searchlines=ff.readlines()
+    with open(filename3,'rb') as ff:
+        undecodedlines=ff.readlines()
+        searchlines = []
+    for undecodedline in undecodedlines:
+        searchlines.append(undecodedline.decode())
     for kk, line in enumerate(searchlines):
         if "POINT_PROCESS" in line:
             break
@@ -244,7 +245,6 @@ def run_model(parameters, time_trace=None):
     synapse.u0 = 1.0
     synapse.e_GABAA = e_syn
     synapse.setRNG(cellprop.synapse_rng)
-
     netcon = neuron.h.NetCon(netstim, synapse )
     netcon.delay = 0.0
     netcon.threshold = 0.0
