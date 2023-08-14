@@ -1,0 +1,25 @@
+name: Mirror to Ebrains
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  to_ebrains:
+    runs-on: ubuntu-latest
+    steps:
+      - name: syncmaster
+        uses: wei/git-sync@v3
+        with:
+          source_repo: "ebrains-cls-interactive/Synaptic_Events_Fitting"
+          source_branch: "main"
+          destination_repo: "https://ghpusher:${{ secrets.EBRAINS_GITLAB_ACCESS_TOKEN }}@gitlab.ebrains.eu/cls/synaptic_events_fitting.git"
+          destination_branch: "main"
+      - name: synctags
+        uses: wei/git-sync@v3
+        with:
+          source_repo: "ebrains-cls-interactive/Synaptic_Events_Fitting"
+          source_branch: "refs/tags/*"
+          destination_repo: "https://ghpusher:${{ secrets.EBRAINS_GITLAB_ACCESS_TOKEN }}@gitlab.ebrains.eu/cls/synaptic_events_fitting.git"
+          destination_branch: "refs/tags/*"
