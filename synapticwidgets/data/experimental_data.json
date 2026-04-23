@@ -1,0 +1,10 @@
+[
+  {
+    "exp_name": "sIPSCs from 3-4 months old Tg2576 female mice hippocampus CA1 pyramidal cell (E1)",
+    "exp_link": "https://data-proxy.ebrains.eu/api/v1/buckets/p63ea6-Cherubini_RUP_T1.1.6_nar030/hbp-00011/Tg2576/Sub1/Samp1/hbp-00011_Tg2576_Sub1_Samp1__expE1.txt"
+  },
+  {
+    "exp_name": "sIPSCs from 3-4 months old Tg2576 female mice hippocampus CA1 pyramidal cell (E2)",
+    "exp_link": "https://data-proxy.ebrains.eu/api/v1/buckets/p63ea6-Cherubini_RUP_T1.1.6_nar030/hbp-00011/Tg2576/Sub1/Samp2/hbp-00011_Tg2576_Sub1_Samp2__expE2.txt"
+  }
+]
