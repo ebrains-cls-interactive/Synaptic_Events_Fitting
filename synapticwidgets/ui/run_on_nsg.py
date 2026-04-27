@@ -3,7 +3,7 @@ import tarfile
 
 import ipywidgets
 from pathlib import Path
-from synapticwidgets.core.nsg_client import NSGSubmitter
+from synapticwidgets.core.nsg_submitter import NSGSubmitter
 from synapticwidgets.core.nsg_package_builder import NSGPackageBuilder
 from synapticwidgets.ui.base_widget import BaseWidget
 from synapticwidgets.ui.nsg_credentials_widget import NSGCredentialsWidget
