@@ -30,5 +30,9 @@ Homepage = "https://github.com/ebrains-cls-interactive/Synaptic_Events_Fitting"
 [tool.hatch.build.targets.wheel]
 include = [
     "synapticwidgets/",
-    "data/"
+]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "synapticwidgets/",
 ]
