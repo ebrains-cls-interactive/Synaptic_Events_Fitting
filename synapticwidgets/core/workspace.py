@@ -6,8 +6,10 @@ def prepare_workspace_environment():
     home_path = Path.home() / "synapticwidgets"
     data_path = home_path / "data"
     transfer_path = home_path / "transfer"
+    results_path = home_path / "results"
 
     transfer_path.mkdir(parents=True, exist_ok=True)
+    results_path.mkdir(parents=True, exist_ok=True)
 
     if not (data_path.exists() and any(data_path.iterdir())):
         copy_from_installed_wheel("synapticwidgets.data", resource="", dest_path=data_path)
@@ -17,6 +19,7 @@ def prepare_workspace_environment():
         "home_path": home_path,
         "data_path": data_path,
         "transfer_path": transfer_path,
+        "results_path": results_path,
     }
 
 def copy_from_installed_wheel(package_name, resource="", dest_path=None):

@@ -17,9 +17,13 @@ class RunOnNSG(ipywidgets.VBox, BaseWidget):
     Widget for submitting a NEURON simulation using NSG Portal.
     """
 
-    def __init__(self, data_path, transfer_path, **kwargs):
+    def __init__(self, data_path, transfer_path, results_path, **kwargs):
         self.data_path = Path(data_path)
         self.transfer_path = Path(transfer_path)
+        self.results_path = Path(results_path)
+        self.results_nsg_path = self.results_path / "results_NSG"
+        self.results_nsg_path.mkdir(parents=True, exist_ok=True)
+
         self.package_builder = NSGPackageBuilder(self.data_path, self.transfer_path)
         self.current_job_handle = None
         self.current_job_stage = None
@@ -274,7 +278,7 @@ class RunOnNSG(ipywidgets.VBox, BaseWidget):
                     self._show_error("No downloadable output.tar.gz, STDOUT or STDERR files were found.")
                     return
 
-                results_dir = self.transfer_path.parent / "resultsNSG" / job_settings["job_name"]
+                results_dir = self.results_nsg_path / job_settings["job_name"]
                 results_dir.mkdir(parents=True, exist_ok=True)
 
                 downloaded = []

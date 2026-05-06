@@ -12,9 +12,13 @@ class RunWithSA(ipywidgets.VBox, BaseWidget):
     Widget for submitting a NEURON simulation using Service Account.
     """
 
-    def __init__(self, data_path, transfer_path, **kwargs):
+    def __init__(self, data_path, transfer_path, results_path, **kwargs):
         self.data_path = Path(data_path)
         self.transfer_path = Path(transfer_path)
+        self.results_path = Path(results_path)
+        self.results_sa_path = self.results_path / "results_SA"
+        self.results_sa_path.mkdir(parents=True, exist_ok=True)
+
         self.package_builder = NSGPackageBuilder(self.data_path, self.transfer_path)
 
         self.title = ipywidgets.HTML("<h3>Run a simulation on NSG using Service Account</h3>")

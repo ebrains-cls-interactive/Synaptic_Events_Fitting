@@ -14,7 +14,10 @@ dependencies = [
     "IPython",
     "requests",
     "importlib_resources",
-    "pytz"
+    "pytz",
+    "pandas",
+    "plotly",
+    "anywidget"
 ]
 keywords = ["synapses", "fitting", "event", "data", "model"]
 authors = [
