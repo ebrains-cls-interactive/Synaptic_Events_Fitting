@@ -1,4 +1,3 @@
-import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -10,15 +9,15 @@ class SASubmitter:
     base_url: str = 'https://cls-sa.ebrains-italy.eu'
 
     def _job_url(self):
-        return f"{self.base_url}/job"
+        return f"{self.base_url}/job/"
 
     def _get_service_account_headers(self, zip_name=None, payload=False):
         """
         Returns the Service Account headers to pass in the requests object.
         """
         token = self._retrieve_token()
-        app_key = '' #TODO store/retrieve?
-        headers = {'Authorization': 'Bearer ' + token, 'Appkey': app_key,}
+        app_key = "..." #TODO how to store it?
+        headers = {'Authorization': 'Bearer ' + token, 'appkey': app_key,}
         if zip_name:
             content_type = ''
             if zip_name.endswith('.zip'):
@@ -43,9 +42,9 @@ class SASubmitter:
             'project': project,
             'tool': tool,
             'init_file': 'start.py',
-            'node_number': node_num,
-            'core_number': core_num,
-            'runtime': runtime,
+            'node_number': str(node_num),
+            'core_number': str(core_num),
+            'runtime': str(runtime),
             'title': title
         }
 
@@ -63,13 +62,16 @@ class SASubmitter:
 
         return token
 
-    def submit_job(self, zip_file, settings, hpc="NSG", project="nsg-project", tool_id="NEURON_EXPANSE"):
+    def submit_job(self, zip_file, settings, hpc="NSG", project=None, tool_id="NEURON_EXPANSE"):
         """
-        Submit a job behind the Service Account through NSG-R.
+        Submit a job through the Service Account.
         """
         zip_file = Path(zip_file)
         if not zip_file.exists():
             raise FileNotFoundError(f"Zip file not found: {zip_file}")
+
+        if not project:
+            raise ValueError("Project is required for Service Account job submission.")
 
         zip_name = zip_file.name
         payload = self._get_service_account_payload(
@@ -83,26 +85,30 @@ class SASubmitter:
         )
 
         headers = self._get_service_account_headers(payload=True)
+        print("payload:", payload)
         r = requests.post(url=self._job_url(), headers=headers, json=payload, timeout=300)
+        print("create response:", r.status_code, r.text)
 
         if r.status_code != 201:
             raise RuntimeError(f"Service account job creation failed: {r.status_code} {r.text}")
 
-        job_id = r.json().get("id")
-        if not job_id:
+        job_info = r.json()
+        job_id = job_info.get("id")
+        if job_id is None:
             raise RuntimeError("Service account job creation succeeded but no job id was returned.")
 
-        upload_url = f"{self._job_url()}/{job_id}/upload-input-file/"
+        upload_url = f"{self._job_url()}{job_id}/upload-input-file/"
         headers = self._get_service_account_headers(zip_name=zip_name)
 
         with zip_file.open("rb") as fd:
             r = requests.patch(url=upload_url, headers=headers, data=fd.read(), timeout=300)
 
+        print("patch response:", r.status_code, r.text)
+
         if r.status_code >= 400:
             raise RuntimeError(f"Service account input upload failed: {r.status_code} {r.text}")
 
-        return r
-
+        return job_info
 
     def get_service_account_jobs(self, project):
         """
@@ -115,13 +121,27 @@ class SASubmitter:
             raise RuntimeError(f"Service account jobs retrieval failed: {r.status_code} {r.content}")
         return r.json()
 
+    def get_service_account_job(self, job_id):
+        """
+        Returns a specific user job.
+        """
+        headers = self._get_service_account_headers()
+        job_url = f"{self._job_url()}{job_id}/"
+
+        r = requests.get(url=job_url, headers=headers, timeout=300)
+
+        if r.status_code != 200:
+            raise RuntimeError(f"Service account job retrieval failed: {r.status_code} {r.text}")
+
+        return r.json()
+
     def get_service_account_job_results(self, project, job_id):
         """
-        Returns a list of the files once the job ends.
+        Returns the output file payload once the job ends
         """
         headers = self._get_service_account_headers()
 
-        sa_endpoint = f"{self._job_url()}/results/"
+        sa_endpoint = f"{self._job_url()}results/"
         params = {
             'job_id': job_id,
             'project': project,
@@ -134,12 +154,31 @@ class SASubmitter:
                 f"Service account job results retrieval failed: {r.status_code} {r.text}"
             )
 
-        file_name = r.headers.get('Content-Disposition', 'results.zip').split('filename=')[1].replace('"', '')
+        content_disposition = r.headers.get("Content-Disposition", "")
+        if "filename=" in content_disposition:
+            file_name = content_disposition.split("filename=")[1].replace('"', "").strip()
+        else:
+            file_name = "results.zip"
         file_content = r.content
 
-        file_list = {
-            file_name: file_content
-        }
+        return {
+        "file_name": file_name,
+        "file_content": file_content,
+    }
 
-        return file_list
 
+    def get_available_projects(self):
+        """
+        Returns the list of projects available for the current appkey.
+        """
+        headers = self._get_service_account_headers()
+        project_url = f"{self.base_url}/project/"
+
+        r = requests.get(url=project_url, headers=headers, timeout=300)
+
+        if r.status_code != 200:
+            raise RuntimeError(
+                f"Service account projects retrieval failed: {r.status_code} {r.text}"
+            )
+
+        return r.json()

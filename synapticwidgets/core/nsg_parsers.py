@@ -88,3 +88,32 @@ def parse_results_listing(xml_text):
                 files.append(item)
 
     return files
+
+def parse_list_jobs_xml(xml_text):
+    root = ET.fromstring(xml_text)
+    jobs = []
+
+    jobs_root = root.find("jobs")
+    if jobs_root is None:
+        return jobs
+
+    for job in jobs_root.findall("jobstatus"):
+        self_uri_el = job.find("selfUri")
+        if self_uri_el is None:
+            continue
+
+        url_el = self_uri_el.find("url")
+        title_el = self_uri_el.find("title")
+
+        self_uri = url_el.text.strip() if url_el is not None and url_el.text else ""
+        title = title_el.text.strip() if title_el is not None and title_el.text else ""
+
+        if self_uri:
+            handle = self_uri.rstrip("/").split("/")[-1]
+            jobs.append({
+                "handle": handle,
+                "title": title or handle,
+                "self_uri": self_uri,
+            })
+
+    return jobs

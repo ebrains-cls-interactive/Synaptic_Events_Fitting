@@ -1,6 +1,3 @@
-import shutil
-import tarfile
-
 import ipywidgets
 from pathlib import Path
 from synapticwidgets.core.nsg_submitter import NSGSubmitter
@@ -9,8 +6,8 @@ from synapticwidgets.ui.base_widget import BaseWidget
 from synapticwidgets.ui.nsg_credentials_widget import NSGCredentialsWidget
 from synapticwidgets.ui.nsg_job_settings_widget import NSGJobSettingsWidget
 from synapticwidgets.ui.nsg_monitor_widget import NSGMonitorWidget
-from synapticwidgets.core.nsg_parsers import parse_submitted_job_xml, parse_checked_job_xml, parse_results_listing
-
+from synapticwidgets.core.nsg_parsers import parse_submitted_job_xml, parse_checked_job_xml, parse_results_listing, parse_list_jobs_xml
+from synapticwidgets.core.results_handler import ResultsHandler
 
 class RunOnNSG(ipywidgets.VBox, BaseWidget):
     """
@@ -37,15 +34,13 @@ class RunOnNSG(ipywidgets.VBox, BaseWidget):
 
         self.submit_button = ipywidgets.Button(description="Submit job", button_style="primary", icon="play")
 
-        self.check_sim_button = ipywidgets.Button(description="Check NSG simulation", icon="refresh", disabled=True)
+        self.check_sim_button = ipywidgets.Button(description="Check simulation", icon="refresh", disabled=True)
 
-        self.retrieve_results_button = ipywidgets.Button(description="Retrieve results", icon="download",
-                                                         layout=ipywidgets.Layout(display="none"))
 
         self.sim_status = ipywidgets.HTML("")
 
         submit_buttons = ipywidgets.HBox(
-            [self.submit_button, self.check_sim_button, self.retrieve_results_button],
+            [self.submit_button, self.check_sim_button],
             layout=ipywidgets.Layout(gap="10px")
         )
 
@@ -78,8 +73,8 @@ class RunOnNSG(ipywidgets.VBox, BaseWidget):
         self._update_actions_state()
         self.submit_button.on_click(self._submit_job)
         self.check_sim_button.on_click(self._check_simulation)
-        self.retrieve_results_button.on_click(self._retrieve_results)
         self.monitor_widget.check_jobs_button.on_click(self._check_jobs)
+        self.monitor_widget.download_results_button.on_click(self._retrieve_selected_job_results)
 
         super().__init__([
             self.title,
@@ -158,7 +153,6 @@ class RunOnNSG(ipywidgets.VBox, BaseWidget):
 
                 self.current_results_uri = None
 
-                self.retrieve_results_button.layout.display = "none"
                 self.check_sim_button.disabled = False
                 self.sim_status.value = (
                     f"<span style='color: #444;'>"
@@ -202,11 +196,6 @@ class RunOnNSG(ipywidgets.VBox, BaseWidget):
                 failed = str(job_info["failed"]).lower() == "true"
                 has_results = bool(self.current_results_uri)
 
-                if terminal and not failed and has_results:
-                    self.retrieve_results_button.layout.display = ""
-                else:
-                    self.retrieve_results_button.layout.display = "none"
-
                 self.sim_status.value = (
                     f"<span style='color: #444;'>"
                     f"<b>Job:</b> {job_info['job_name']}<br>"
@@ -218,7 +207,8 @@ class RunOnNSG(ipywidgets.VBox, BaseWidget):
                 )
 
                 if terminal and not failed and has_results:
-                    self._show_success("Simulation finished. Results are ready to retrieve.")
+                    self._show_success("Simulation finished. You can retrieve the results from the Job monitoring "
+                                       "section.")
                 elif terminal and failed:
                     self._show_error("Simulation finished with failure.")
                 else:
@@ -239,24 +229,36 @@ class RunOnNSG(ipywidgets.VBox, BaseWidget):
                                          app_key=creds["app_key"],)
 
                 response = submitter.list_jobs()
+                jobs = parse_list_jobs_xml(response.text)
+
+                if not jobs:
+                    self.monitor_widget.reset_jobs()
+                    self._show_error("No jobs were found.")
+                    return
+
+                options = []
+                for job in jobs:
+                    options.append((job["title"], job["handle"]))
+
+                self.monitor_widget.set_jobs(options)
                 self._show_success("Jobs retrieved successfully.")
-                print(response.text)
 
             except Exception as exc:
+                self.monitor_widget.reset_jobs()
                 self._show_error(f"Could not retrieve jobs: {exc}")
 
-    def _retrieve_results(self, _):
+    def _retrieve_selected_job_results(self, _):
         with self.output:
             self.output.clear_output()
             self.status_message.value = ""
 
-            if not self.current_results_uri:
-                self._show_error("No results are available for retrieval yet.")
+            selected_handle = self.monitor_widget.jobs_dropdown.value
+            if not selected_handle:
+                self._show_error("No job selected.")
                 return
 
             try:
                 creds = self.credentials_widget.get_credentials()
-                job_settings = self.job_settings_widget.get_values()
 
                 submitter = NSGSubmitter(
                     username=creds["username"],
@@ -264,7 +266,26 @@ class RunOnNSG(ipywidgets.VBox, BaseWidget):
                     app_key=creds["app_key"],
                 )
 
-                listing_response = submitter.get_results_listing(self.current_results_uri)
+                response = submitter.get_job(selected_handle)
+                job_info = parse_checked_job_xml(response.text)
+
+                terminal = str(job_info["terminal_stage"]).lower() == "true"
+                failed = str(job_info["failed"]).lower() == "true"
+                results_uri = job_info["results_uri"]
+
+                if not terminal:
+                    self._show_error("Selected job is not finished yet.")
+                    return
+
+                if failed:
+                    self._show_error("Selected job finished with failure.")
+                    return
+
+                if not results_uri:
+                    self._show_error("No results are available for the selected job.")
+                    return
+
+                listing_response = submitter.get_results_listing(results_uri)
                 files = parse_results_listing(listing_response.text)
 
                 if not files:
@@ -278,7 +299,7 @@ class RunOnNSG(ipywidgets.VBox, BaseWidget):
                     self._show_error("No downloadable output.tar.gz, STDOUT or STDERR files were found.")
                     return
 
-                results_dir = self.results_nsg_path / job_settings["job_name"]
+                results_dir = self.results_nsg_path / selected_handle
                 results_dir.mkdir(parents=True, exist_ok=True)
 
                 downloaded = []
@@ -287,38 +308,19 @@ class RunOnNSG(ipywidgets.VBox, BaseWidget):
                     submitter.download_result_file(item["url"], dest)
                     downloaded.append(dest)
 
+                archive_path = results_dir / "output.tar.gz"
+                if archive_path.exists():
+                    ResultsHandler.extract_output_archive(archive_path, results_dir)
+
+
                 self._show_success(f"Results downloaded to {results_dir}")
+
                 print("Downloaded files:")
                 for path in downloaded:
                     print(path)
 
-                self._extract_output_archive(results_dir)
-
             except Exception as exc:
-                self._show_error(f"Could not retrieve results: {exc}")
-
-    @staticmethod
-    def _extract_output_archive(results_dir):
-        archive_path = results_dir / "output.tar.gz"
-        if not archive_path.exists():
-            return
-
-        extract_dir = results_dir / "OUTPUT"
-        extract_dir.mkdir(exist_ok=True)
-
-        with tarfile.open(archive_path) as tf:
-            tf.extractall(extract_dir)
-
-        transfer_dir = extract_dir / "transfer"
-        if transfer_dir.exists():
-            for file_path in transfer_dir.iterdir():
-                keep = (
-                        file_path.suffix == ".txt"
-                        or (file_path.suffix == ".mod" and file_path.name != "netstims.mod")
-                        or file_path.name in {"test.csv", "start.py"}
-                )
-                if keep:
-                    shutil.copy2(file_path, results_dir / file_path.name)
+                self._show_error(f"Could not retrieve selected job results: {exc}")
 
     def _update_actions_state(self, change=None):
         has_credentials = self.credentials_widget.has_credentials()
