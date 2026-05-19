@@ -91,16 +91,3 @@ class NSGPackageBuilder:
                     zf.write(path, arcname=arcname)
 
         return zip_path
-
-    # def compile_mod_files(self):
-    #     transfer_path = Path(self.transfer_path)
-    #
-    #     result = subprocess.run(
-    #         ["nrnivmodl"],
-    #         cwd=transfer_path,
-    #         capture_output=True,
-    #         text=True,
-    #         check=True,
-    #     )
-    #
-    #     return result

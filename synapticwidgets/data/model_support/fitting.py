@@ -9,8 +9,12 @@ import subprocess
 #import matplotlib
 #matplotlib.use('Agg')
 #import matplotlib.pyplot as plt
-import readconffile as rcf
-import readexpfile as ref
+try:
+    from . import readconffile as rcf
+    from . import readexpfile as ref
+except ImportError:
+    import readconffile as rcf
+    import readexpfile as ref
 
 global nefun
 global seedinitvalue

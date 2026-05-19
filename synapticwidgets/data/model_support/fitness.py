@@ -1,8 +1,12 @@
 import neuron
 import math
 import copy
-import readconffile as rcf
-import readexpfile as ref
+try:
+    from . import readconffile as rcf
+    from . import readexpfile as ref
+except ImportError:
+    import readconffile as rcf
+    import readexpfile as ref
 
 filename3=''
 

@@ -41,7 +41,9 @@ class NSGJobSettingsWidget(ipywidgets.VBox):
         )
 
         self.nr_cores = ipywidgets.IntText(
-            value=128,
+            value=12,
+            min=0,
+            max=24,
             description="Cores/node:",
             style={"description_width": "120px"},
             layout=ipywidgets.Layout(width="350px"),

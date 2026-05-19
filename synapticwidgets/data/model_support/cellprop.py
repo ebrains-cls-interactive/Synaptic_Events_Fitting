@@ -1,5 +1,8 @@
 import neuron
-import readconffile as rcf
+try:
+    from . import readconffile as rcf
+except ImportError:
+    import readconffile as rcf
 
 neuron.h.use_mcell_ran4(1)
 neuron.h.cvode_active(0)

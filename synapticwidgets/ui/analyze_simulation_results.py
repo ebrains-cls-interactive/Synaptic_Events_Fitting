@@ -1,6 +1,8 @@
 from pathlib import Path
 import ipywidgets
 from synapticwidgets.ui.base_widget import BaseWidget
+from synapticwidgets.core.best_fit_analysis import (load_fit_results, extract_best_fit_parameters,
+                                                    prepare_best_fit_workspace, run_best_fit_simulation, plot_best_fit)
 
 
 class AnalyzeSimulationResults(ipywidgets.VBox, BaseWidget):
@@ -8,8 +10,9 @@ class AnalyzeSimulationResults(ipywidgets.VBox, BaseWidget):
     Widget for analyzing locally downloaded simulation results
     """
 
-    def __init__(self, results_path, **kwargs):
+    def __init__(self, results_path, best_fit_workspace_path, **kwargs):
         self.results_path = Path(results_path)
+        self.best_fit_workspace_path = Path(best_fit_workspace_path)
 
         self.title = ipywidgets.HTML("<h3>Analyze local simulation results</h3>")
 
@@ -109,7 +112,8 @@ class AnalyzeSimulationResults(ipywidgets.VBox, BaseWidget):
             try:
                 from IPython.display import HTML, display
 
-                data, names, param_name = self._load_analysis_data(folder)
+                analysis = load_fit_results(folder)
+                data = analysis["data"]
 
                 if data.empty:
                     self._show_error("Results file is empty. No fitting result is available.")
@@ -139,7 +143,9 @@ class AnalyzeSimulationResults(ipywidgets.VBox, BaseWidget):
             import plotly.graph_objs as go
             from IPython.display import display
 
-            data, names, param_name = self._load_analysis_data(folder)
+            analysis = load_fit_results(folder)
+            data = analysis["data"]
+            param_name = analysis["paramname"]
 
             if data.empty:
                 self._show_error("Results file is empty. No fitting result is available.")
@@ -172,50 +178,39 @@ class AnalyzeSimulationResults(ipywidgets.VBox, BaseWidget):
             self._show_error(f"Could not build boxplot results: {exc}")
 
     def _show_best_fit(self, _):
-        #TODO: pass for now
-        pass
+        with self.output:
+            self.output.clear_output()
+            self.status_message.value = ""
+            self.plot_box.children = []
 
-    @staticmethod
-    def _find_analysis_files(folder_path):
-        folder_path = Path(folder_path)
+            folder = self._get_selected_folder()
+            if folder is None:
+                self._show_error("No results folder selected.")
+                return
+            try:
+                analysis = load_fit_results(folder)
 
-        config_file = None
-        csv_file = None
+                prepare_best_fit_workspace(folder, self.best_fit_workspace_path)
 
-        for file_path in folder_path.iterdir():
-            if file_path.is_file():
-                if file_path.name.startswith("config") and file_path.suffix == ".txt":
-                    config_file = file_path
-                elif file_path.suffix == ".csv":
-                    csv_file = file_path
+                best_fit = extract_best_fit_parameters(analysis["data"], analysis["names"], analysis["paramname"])
 
-        return config_file, csv_file
+                simulation_result = run_best_fit_simulation(
+                    transfer_path=self.best_fit_workspace_path, data=analysis["data"], names=analysis["names"],
+                    best_fit=best_fit, esynf=analysis["esynf"], Vrestf=analysis["Vrestf"],
+                    nrparamsfit=analysis["nrparamsfit"], nrdepnotfit=analysis["nrdepnotfit"],
+                    modfilename=analysis["modfilename"], paramname=analysis["paramname"],
+                    depnotfit=analysis["depnotfit"], nrdepfit=analysis["nrdepfit"], depfit=analysis["depfit"],
+                    paramsconstraints=analysis["paramsconstraints"], inputfilename=analysis["inputfilename"])
 
-    def _load_analysis_data(self, folder):
-        config_file, csv_file = self._find_analysis_files(folder)
+                fig = plot_best_fit(simulation_result)
 
-        if config_file is None:
-            raise FileNotFoundError("No config file was found in the selected folder.")
+                self.plot_box.children = [fig]
 
-        if csv_file is None:
-            raise FileNotFoundError("No results CSV file was found in the selected folder.")
-
-        import pandas
-        from synapticwidgets.data.model_support import readconffile
-
-        readconffile.filename = str(config_file)
-
-        [inputfilename, modfilename, parametersfilename, flagdata, flagcut, nrtraces, Vrestf, esynf,
-         nrparamsfit, paramnr, paramname, paraminitval, paramsconstraints, nrdepnotfit, depnotfit, nrdepfit,
-         depfit, seedinitvaluef] = readconffile.readconffile()
-
-        names = ["trace", "fitnr", "error"]
-        for k in range(len(paramname)):
-            names.append(paramname[k])
-        names.append("thresh")
-        names.append("min")
-
-        cols = range(0, len(names))
-        data = pandas.read_csv(csv_file, sep="\t", usecols=cols, names=names)
-
-        return data, names, paramname
+                self._show_success(
+                    f"Best fit loaded from {folder.name}: "
+                    f"trace {simulation_result['trace_number']}, "
+                    f"CSV error {best_fit['error']:.6f}, "
+                    f"replay error {simulation_result['error_verification']:.6f}"
+                )
+            except Exception as exc:
+                self._show_error(f"Could not load best fit: {exc}")

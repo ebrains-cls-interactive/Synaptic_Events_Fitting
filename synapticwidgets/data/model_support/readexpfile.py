@@ -1,4 +1,7 @@
-import readconffile
+try:
+    from . import readconffile
+except ImportError:
+    import readconffile
 filename2=''
 def getColumns(inFile, delim="\t", header=True):
     cols = {}

@@ -9,6 +9,19 @@ version = "0.1"
 description = "Fitting synaptic events using data and model in NeuroInformatics Platform"
 license = { file = "LICENSE" }
 requires-python = ">=3.8"
+classifiers = [
+    "Framework :: Jupyter",
+    "Framework :: Jupyter :: JupyterLab",
+    "Framework :: Jupyter :: JupyterLab :: 4",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
 dependencies = [
     "ipywidgets",
     "IPython",
@@ -17,8 +30,14 @@ dependencies = [
     "pytz",
     "pandas",
     "plotly",
-    "anywidget"
+    "anywidget",
 ]
+
+[project.optional-dependencies]
+neuron = [
+    "neuron"
+]
+
 keywords = ["synapses", "fitting", "event", "data", "model"]
 authors = [
     { name = "Carmen Alina Lupascu", email = "carmen.lupascu@ibf.cnr.it" },
