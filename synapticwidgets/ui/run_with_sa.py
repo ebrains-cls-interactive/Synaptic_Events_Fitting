@@ -24,6 +24,7 @@ class RunWithSA(ipywidgets.VBox, BaseWidget):
         self.package_builder = NSGPackageBuilder(self.data_path, self.transfer_path)
 
         self.current_job_id = None
+        self.current_remote_job_id = None
         self.current_job_status = None
 
         self.title = ipywidgets.HTML("<h3>Run a simulation on NSG using Service Account</h3>")
@@ -36,13 +37,10 @@ class RunWithSA(ipywidgets.VBox, BaseWidget):
 
         self.check_sim_button = ipywidgets.Button(description="Check simulation", icon="refresh", disabled=True)
 
-        self.retrieve_results_button = ipywidgets.Button(description="Retrieve results", icon="download",
-                                                         layout=ipywidgets.Layout(display="none"))
-
         self.sim_status = ipywidgets.HTML("")
 
         submit_buttons = ipywidgets.HBox(
-            [self.submit_button, self.check_sim_button, self.retrieve_results_button],
+            [self.submit_button, self.check_sim_button],
             layout=ipywidgets.Layout(gap="10px")
         )
 
@@ -76,8 +74,8 @@ class RunWithSA(ipywidgets.VBox, BaseWidget):
 
         self.submit_button.on_click(self._submit_job)
         self.check_sim_button.on_click(self._check_simulation)
-        self.retrieve_results_button.on_click(self._retrieve_results)
         self.monitor_widget.retrieve_jobs_button.on_click(self._retrieve_jobs)
+        self.monitor_widget.download_results_button.on_click(self._retrieve_selected_job_results)
 
         self._update_actions_state()
         super().__init__([self.title, info_box, actions_box, self.status_message, self.output], layout=self.DEFAULT_BORDER)
@@ -88,6 +86,9 @@ class RunWithSA(ipywidgets.VBox, BaseWidget):
 
         self.submit_button.disabled = not has_project
         self.monitor_widget.retrieve_jobs_button.disabled = not has_project
+
+        if not has_project:
+            self.monitor_widget.reset_jobs()
 
     def _load_projects(self, _):
         with self.output:
@@ -163,9 +164,9 @@ class RunWithSA(ipywidgets.VBox, BaseWidget):
                 )
 
                 self.current_job_id = response.get("id")
+                self.current_remote_job_id = response.get("job_id")
                 self.current_job_status = response.get("stage")
 
-                self.retrieve_results_button.layout.display = "none"
                 self.check_sim_button.disabled = False
                 self.sim_status.value = (
                     f"<span style='color: #444;'>"
@@ -192,10 +193,32 @@ class RunWithSA(ipywidgets.VBox, BaseWidget):
                 submitter = SASubmitter()
                 jobs = submitter.get_service_account_jobs(project=context["project"])
 
+                if not jobs:
+                    self.monitor_widget.reset_jobs()
+                    self._show_error("No Service Account jobs were found.")
+                    return
+
+                options = []
+                for job in jobs:
+                    job_title = job.get("title", "")
+                    job_id = job.get("id")
+                    remote_job_id = job.get("job_id")
+
+                    if job_id is None or remote_job_id is None:
+                        continue
+
+                    options.append((job_title, (job_id, remote_job_id)))
+
+                if not options:
+                    self.monitor_widget.reset_jobs()
+                    self._show_error("No valid Service Account jobs could be parsed.")
+                    return
+
+                self.monitor_widget.set_jobs(options)
                 self._show_success("Service Account jobs retrieved successfully.")
-                print(jobs)
 
             except Exception as exc:
+                self.monitor_widget.reset_jobs()
                 self._show_error(f"Could not retrieve Service Account jobs: {exc}")
 
     def _check_simulation(self, _):
@@ -209,17 +232,14 @@ class RunWithSA(ipywidgets.VBox, BaseWidget):
 
             try:
                 submitter = SASubmitter()
-                job_info = submitter.get_service_account_job(self.current_job_id)
+                context = self.context_widget.get_values()
+                job_info = submitter.get_service_account_job(self.current_job_id, self.current_remote_job_id,
+                                                             context["project"],)
 
                 self.current_job_status = job_info.get("stage")
 
                 terminal = bool(job_info.get("terminal_stage"))
                 failed = bool(job_info.get("failed"))
-
-                if terminal and not failed:
-                    self.retrieve_results_button.layout.display = ""
-                else:
-                    self.retrieve_results_button.layout.display = "none"
 
                 self.sim_status.value = (
                     f"<span style='color: #444;'>"
@@ -235,7 +255,8 @@ class RunWithSA(ipywidgets.VBox, BaseWidget):
                 )
 
                 if terminal and not failed:
-                    self._show_success("Simulation finished. Results are ready to retrieve.")
+                    self._show_success("Simulation finished. You can retrieve the results from the Job monitoring "
+                                       "section.")
                 elif terminal and failed:
                     self._show_error("Simulation finished with failure.")
                 else:
@@ -244,46 +265,60 @@ class RunWithSA(ipywidgets.VBox, BaseWidget):
             except Exception as exc:
                 self._show_error(f"Could not check simulation: {exc}")
 
-    def _retrieve_results(self, _):
+    def _retrieve_selected_job_results(self, _):
         with self.output:
             self.output.clear_output()
             self.status_message.value = ""
 
-            if self.current_job_id is None:
-                self._show_error("No submitted Service Account job is available.")
+            selected_value = self.monitor_widget.jobs_dropdown.value
+            if not selected_value:
+                self._show_error("No job selected.")
                 return
+
+            selected_job_id, selected_remote_job_id = selected_value
 
             try:
                 context = self.context_widget.get_values()
-                job_settings = self.job_settings_widget.get_values()
-
+                print("dropdown value:", selected_job_id)
                 submitter = SASubmitter()
+                job_info = submitter.get_service_account_job(selected_job_id, selected_remote_job_id, context["project"])
+
+                terminal = bool(job_info.get("terminal_stage"))
+                failed = bool(job_info.get("failed"))
+
+                if not terminal:
+                    self._show_error("Selected job is not finished yet.")
+                    return
+
+                if failed:
+                    self._show_error("Selected job finished with failure.")
+                    return
+
                 result = submitter.get_service_account_job_results(
                     project=context["project"],
-                    job_id=self.current_job_id,
+                    job_id=selected_remote_job_id,
                 )
 
                 if not result:
-                    self._show_error("No results were returned for this Service Account job.")
+                    self._show_error("No results were returned for the selected Service Account job.")
                     return
 
                 file_name = result["file_name"]
                 file_content = result["file_content"]
 
-                results_dir = self.results_sa_path / job_settings["job_name"]
+                job_label = job_info.get("title") or str(selected_job_id)
+                results_dir = self.results_sa_path / job_label
                 results_dir.mkdir(parents=True, exist_ok=True)
 
                 archive_path = results_dir / file_name
                 archive_path.write_bytes(file_content)
 
+                ResultsHandler.extract_output_archive(archive_path, results_dir)
+
                 self._show_success(f"Results downloaded to {results_dir}")
 
                 print("Downloaded file:")
                 print(archive_path)
-
-                ResultsHandler.extract_output_archive(archive_path, results_dir)
-
-                self.sim_status.value += f"<br><b>Results folder:</b> {results_dir}"
 
             except Exception as exc:
                 self._show_error(f"Could not retrieve results: {exc}")

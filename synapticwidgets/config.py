@@ -1,0 +1,1 @@
+SERVICE_ACCOUNT_APP_KEY = r"8\szw<$`8mf|bEfYC[`.}b:.Ye8^E'cP"

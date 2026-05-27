@@ -1,6 +1,7 @@
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from synapticwidgets.config import SERVICE_ACCOUNT_APP_KEY
 
 import requests
 
@@ -16,8 +17,7 @@ class SASubmitter:
         Returns the Service Account headers to pass in the requests object.
         """
         token = self._retrieve_token()
-        app_key = "..." #TODO how to store it?
-        headers = {'Authorization': 'Bearer ' + token, 'appkey': app_key,}
+        headers = {'Authorization': 'Bearer ' + token, 'appkey': SERVICE_ACCOUNT_APP_KEY,}
         if zip_name:
             content_type = ''
             if zip_name.endswith('.zip'):
@@ -121,14 +121,18 @@ class SASubmitter:
             raise RuntimeError(f"Service account jobs retrieval failed: {r.status_code} {r.content}")
         return r.json()
 
-    def get_service_account_job(self, job_id):
+    def get_service_account_job(self, job_id, remote_job_id, project):
         """
         Returns a specific user job.
         """
         headers = self._get_service_account_headers()
         job_url = f"{self._job_url()}{job_id}/"
+        query_params = {
+            'job_id': remote_job_id,
+            'project': project
+        }
 
-        r = requests.get(url=job_url, headers=headers, timeout=300)
+        r = requests.get(url=job_url, headers=headers, params=query_params, timeout=300)
 
         if r.status_code != 200:
             raise RuntimeError(f"Service account job retrieval failed: {r.status_code} {r.text}")
@@ -142,11 +146,11 @@ class SASubmitter:
         headers = self._get_service_account_headers()
 
         sa_endpoint = f"{self._job_url()}results/"
-        params = {
+        query_params = {
             'job_id': job_id,
             'project': project,
         }
-        r = requests.get(url=sa_endpoint, params=params, headers=headers, timeout=360000)
+        r = requests.get(url=sa_endpoint, params=query_params, headers=headers, timeout=360000)
 
         print(f"requests: {r.url} with headers: {r.headers}")
         if r.status_code != 200:

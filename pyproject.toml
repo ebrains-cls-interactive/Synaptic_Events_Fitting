@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "synaptic-events-fitting"
 readme = "README.md"
-version = "0.1"
+version = "0.1.0"
 description = "Fitting synaptic events using data and model in NeuroInformatics Platform"
 license = { file = "LICENSE" }
 requires-python = ">=3.8"
@@ -33,17 +33,17 @@ dependencies = [
     "anywidget",
 ]
 
-[project.optional-dependencies]
-neuron = [
-    "neuron"
-]
-
 keywords = ["synapses", "fitting", "event", "data", "model"]
 authors = [
     { name = "Carmen Alina Lupascu", email = "carmen.lupascu@ibf.cnr.it" },
     { name = "Roberto Smiriglia", email = "roberto.smiriglia@ibf.cnr.it" },
     { name = "Luca Leonardo Bologna", email = "lucaleonardo.bologna@cnr.it" },
     { name = "Dario Curreri", email = "dario.curreri@ibf.cnr.it" }
+]
+
+[project.optional-dependencies]
+neuron = [
+    "neuron"
 ]
 
 [project.urls]
