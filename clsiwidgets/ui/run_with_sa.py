@@ -1,12 +1,12 @@
 from pathlib import Path
 import ipywidgets
-from synapticwidgets.core.results_handler import ResultsHandler
-from synapticwidgets.core.sa_submitter import SASubmitter
-from synapticwidgets.ui.base_widget import BaseWidget
-from synapticwidgets.core.nsg_package_builder import NSGPackageBuilder
-from synapticwidgets.ui.sa_context_widget import SAContextWidget
-from synapticwidgets.ui.nsg_job_settings_widget import NSGJobSettingsWidget
-from synapticwidgets.ui.sa_monitor_widget import ServiceAccountMonitorWidget
+from clsiwidgets.core.results_handler import ResultsHandler
+from clsiwidgets.core.sa_submitter import SASubmitter
+from clsiwidgets.ui.base_widget import BaseWidget
+from clsiwidgets.core.nsg_package_builder import NSGPackageBuilder
+from clsiwidgets.ui.sa_context_widget import SAContextWidget
+from clsiwidgets.ui.nsg_job_settings_widget import NSGJobSettingsWidget
+from clsiwidgets.ui.sa_monitor_widget import ServiceAccountMonitorWidget
 
 
 class RunWithSA(ipywidgets.VBox, BaseWidget):

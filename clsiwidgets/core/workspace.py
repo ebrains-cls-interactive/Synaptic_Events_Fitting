@@ -3,7 +3,7 @@ from pathlib import Path
 import importlib_resources
 
 def prepare_workspace_environment():
-    home_path = Path.home() / "synapticwidgets"
+    home_path = Path.home() / "clsiwidgets"
     data_path = home_path / "data"
     transfer_path = home_path / "transfer"
     results_path = home_path / "results"
@@ -14,7 +14,7 @@ def prepare_workspace_environment():
     best_fit_workspace_path.mkdir(parents=True, exist_ok=True)
 
     if not (data_path.exists() and any(data_path.iterdir())):
-        copy_from_installed_wheel("synapticwidgets.data", resource="", dest_path=data_path)
+        copy_from_installed_wheel("clsiwidgets.data", resource="", dest_path=data_path)
 
     populate_workspace_folder(transfer_path, data_path)
     populate_workspace_folder(best_fit_workspace_path, data_path)
@@ -64,6 +64,9 @@ def populate_workspace_folder(transfer_path, data_path):
         txt_file.unlink()
 
     for file_path in model_support_path.iterdir():
+        if not file_path.is_file():
+            continue
+
         dest_file = transfer_path / file_path.name
         if not dest_file.exists():
             shutil.copy2(file_path, dest_file)

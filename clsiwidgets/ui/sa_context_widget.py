@@ -1,5 +1,5 @@
 import ipywidgets
-from synapticwidgets.ui.base_widget import BaseWidget
+from clsiwidgets.ui.base_widget import BaseWidget
 
 
 class SAContextWidget(ipywidgets.VBox, BaseWidget):

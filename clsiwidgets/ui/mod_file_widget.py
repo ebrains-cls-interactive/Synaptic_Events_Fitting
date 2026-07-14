@@ -1,6 +1,6 @@
 import ipywidgets
 import shutil
-from synapticwidgets.ui.base_widget import BaseWidget
+from clsiwidgets.ui.base_widget import BaseWidget
 
 
 class ModFileWidget(ipywidgets.HBox, BaseWidget):

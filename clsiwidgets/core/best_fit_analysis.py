@@ -47,7 +47,7 @@ def load_fit_results(results_dir):
     """
     Load configuration and fitting results form local results folder.
     """
-    from synapticwidgets.data.model_support import readconffile
+    from clsiwidgets.data.model_support import readconffile
 
     files = find_analysis_files(results_dir)
 
@@ -124,7 +124,7 @@ def extract_best_fit_parameters(data, names, param_name):
 
 def prepare_best_fit_workspace(results_dir, transfer_path):
     """
-    Prepare the transfer folder workspace for NEURON best-fit replay using the files from one selected local results
+    Prepare the best_fit_workspace folder workspace for NEURON best-fit replay using the files from one selected local results
      folder.
     """
     results_dir = Path(results_dir)
@@ -194,8 +194,7 @@ def run_best_fit_simulation(transfer_path, data, names, best_fit, esynf, Vrestf,
             )
 
         import neuron
-
-        from synapticwidgets.data.model_support import readconffile, readexpfile
+        from clsiwidgets.data.model_support import readconffile, readexpfile
 
         config_file = next(transfer_path.glob("config*.txt"), None)
         if config_file is None:
@@ -204,7 +203,7 @@ def run_best_fit_simulation(transfer_path, data, names, best_fit, esynf, Vrestf,
         readconffile.filename = str(config_file)
         readexpfile.filename2 = inputfilename.rstrip()
 
-        from synapticwidgets.data.model_support import fitness, cellprop
+        from clsiwidgets.data.model_support import fitness, cellprop
         importlib.reload(fitness)
         importlib.reload(cellprop)
 
@@ -222,7 +221,6 @@ def run_best_fit_simulation(transfer_path, data, names, best_fit, esynf, Vrestf,
         tstop = 100
         e_syn = esynf
         Vrest = Vrestf
-
         netstim = neuron.h.NetStims(0.5, sec=cellprop.soma)
         netstim.freqhz = 18.0
         netstim.q = 0.0
@@ -233,11 +231,6 @@ def run_best_fit_simulation(transfer_path, data, names, best_fit, esynf, Vrestf,
         vclamp = neuron.h.VClamp(0.5, sec=cellprop.soma)
         vclamp.dur[0] = tstop
         vclamp.amp[0] = Vrest
-
-        vclamp_i = neuron.h.Vector()
-        timevec = neuron.h.Vector()
-        timevec.from_python(timevecS)
-        print("First 10 time values:", list(timevecS)[:10])
 
         with open(fitness.filename3) as ff:
             search_lines = ff.readlines()
@@ -264,22 +257,26 @@ def run_best_fit_simulation(transfer_path, data, names, best_fit, esynf, Vrestf,
         netcon.delay = 0.0
         netcon.threshold = 0.0
 
-        neuron.h("""nrparamsfit=0""")
+        vclamp_i = neuron.h.Vector()
+        timevec = neuron.h.Vector()
+        timevec.from_python(timevecS)
+
+        neuron.h('''nrparamsfit=0''')
         neuron.h.nrparamsfit = nrparamsfit
-        neuron.h("""objref paramnamenrn[nrparamsfit]""")
+        neuron.h('''objref paramnamenrn[nrparamsfit]''')
         for i in range(nrparamsfit):
             neuron.h.paramnamenrn[i] = neuron.h.String()
             neuron.h.paramnamenrn[i].s = paramname[i]
 
-        neuron.h("""objref parametersnrn""")
-        neuron.h("""parametersnrn = new Vector()""")
+        neuron.h('''objref parametersnrn''')
+        neuron.h('''parametersnrn =new Vector()''')
         neuron.h.parametersnrn.from_python(parameters)
 
         for i in range(nrparamsfit):
-            neuron.h("""strdef cmdstr""")
-            neuron.h("""a=0""")
+            neuron.h('strdef cmdstr')
+            neuron.h('a=0')
             neuron.h.a = i
-            neuron.h.execute("""sprint(cmdstr,"%s = %g", paramnamenrn[a].s, parametersnrn.x[a])""")
+            neuron.h.execute('sprint(cmdstr,"%s = %g", paramnamenrn[a].s, parametersnrn.x[a])')
             exec(neuron.h.cmdstr)
 
         for i in range(nrdepnotfit):

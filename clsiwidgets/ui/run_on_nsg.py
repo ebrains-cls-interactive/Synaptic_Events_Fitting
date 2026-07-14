@@ -1,13 +1,13 @@
 import ipywidgets
 from pathlib import Path
-from synapticwidgets.core.nsg_submitter import NSGSubmitter
-from synapticwidgets.core.nsg_package_builder import NSGPackageBuilder
-from synapticwidgets.ui.base_widget import BaseWidget
-from synapticwidgets.ui.nsg_credentials_widget import NSGCredentialsWidget
-from synapticwidgets.ui.nsg_job_settings_widget import NSGJobSettingsWidget
-from synapticwidgets.ui.nsg_monitor_widget import NSGMonitorWidget
-from synapticwidgets.core.nsg_parsers import parse_submitted_job_xml, parse_checked_job_xml, parse_results_listing, parse_list_jobs_xml
-from synapticwidgets.core.results_handler import ResultsHandler
+from clsiwidgets.core.nsg_submitter import NSGSubmitter
+from clsiwidgets.core.nsg_package_builder import NSGPackageBuilder
+from clsiwidgets.ui.base_widget import BaseWidget
+from clsiwidgets.ui.nsg_credentials_widget import NSGCredentialsWidget
+from clsiwidgets.ui.nsg_job_settings_widget import NSGJobSettingsWidget
+from clsiwidgets.ui.nsg_monitor_widget import NSGMonitorWidget
+from clsiwidgets.core.nsg_parsers import parse_submitted_job_xml, parse_checked_job_xml, parse_results_listing, parse_list_jobs_xml
+from clsiwidgets.core.results_handler import ResultsHandler
 
 class RunOnNSG(ipywidgets.VBox, BaseWidget):
     """

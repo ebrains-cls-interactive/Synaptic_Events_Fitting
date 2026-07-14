@@ -1,7 +1,7 @@
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from synapticwidgets.config import SERVICE_ACCOUNT_APP_KEY
+from clsiwidgets.config import SERVICE_ACCOUNT_APP_KEY
 
 import requests
 

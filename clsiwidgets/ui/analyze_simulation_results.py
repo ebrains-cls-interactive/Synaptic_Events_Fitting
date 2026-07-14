@@ -1,8 +1,8 @@
 from pathlib import Path
 import ipywidgets
-from synapticwidgets.ui.base_widget import BaseWidget
-from synapticwidgets.core.best_fit_analysis import (load_fit_results, extract_best_fit_parameters,
-                                                    prepare_best_fit_workspace, run_best_fit_simulation, plot_best_fit)
+from clsiwidgets.ui.base_widget import BaseWidget
+from clsiwidgets.core.best_fit_analysis import (load_fit_results, extract_best_fit_parameters,
+                                                prepare_best_fit_workspace, run_best_fit_simulation, plot_best_fit)
 
 
 class AnalyzeSimulationResults(ipywidgets.VBox, BaseWidget):
@@ -103,6 +103,7 @@ class AnalyzeSimulationResults(ipywidgets.VBox, BaseWidget):
         with self.output:
             self.output.clear_output()
             self.status_message.value = ""
+            self.plot_box.children = []
 
             folder = self._get_selected_folder()
             if folder is None:
@@ -193,6 +194,7 @@ class AnalyzeSimulationResults(ipywidgets.VBox, BaseWidget):
                 prepare_best_fit_workspace(folder, self.best_fit_workspace_path)
 
                 best_fit = extract_best_fit_parameters(analysis["data"], analysis["names"], analysis["paramname"])
+                print(f"Best fit parameters: {best_fit}")
 
                 simulation_result = run_best_fit_simulation(
                     transfer_path=self.best_fit_workspace_path, data=analysis["data"], names=analysis["names"],
@@ -213,4 +215,9 @@ class AnalyzeSimulationResults(ipywidgets.VBox, BaseWidget):
                     f"replay error {simulation_result['error_verification']:.6f}"
                 )
             except Exception as exc:
-                self._show_error(f"Could not load best fit: {exc}")
+                message = str(exc)
+                if "WinError 5" in message and "nrnmech.dll" in message:
+                    self._show_error("NEURON cannot reload the compiled DLL in the current session. "
+                                     "Please restart the kernel and try Best fit again.")
+                else:
+                    self._show_error(f"Could not load best fit: {exc}")

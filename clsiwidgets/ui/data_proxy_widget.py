@@ -3,7 +3,7 @@ from importlib import resources
 import ipywidgets
 import requests
 
-from synapticwidgets.ui.base_widget import BaseWidget
+from clsiwidgets.ui.base_widget import BaseWidget
 
 
 class DataProxyWidget(ipywidgets.VBox, BaseWidget):
@@ -16,7 +16,7 @@ class DataProxyWidget(ipywidgets.VBox, BaseWidget):
 
         self.transfer_dir = transfer_dir
 
-        with resources.files("synapticwidgets.data").joinpath("experimental_data.json").open("r", encoding="utf-8") as f:
+        with resources.files("clsiwidgets.data").joinpath("experimental_data.json").open("r", encoding="utf-8") as f:
             self.exp_data = json.load(f)
 
         self.exp_dict = {e["exp_name"]: e["exp_link"] for e in self.exp_data}
