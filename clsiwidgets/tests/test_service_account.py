@@ -106,6 +106,8 @@ def test_run_with_sa_submits_job_with_mocked_service(mocker, tmp_path):
         widget.job_settings_widget.traces_opt.value = "singletrace"
         widget.job_settings_widget.traces.value = "7"
 
+        expected_settings = widget.job_settings_widget.get_values()
+
         widget._submit_job(None)
 
         package_builder_class.assert_called_once_with(
@@ -120,8 +122,6 @@ def test_run_with_sa_submits_job_with_mocked_service(mocker, tmp_path):
         package_builder.create_zip.assert_called_once_with()
 
         submitter_class.assert_called_once_with()
-
-        expected_settings = widget.job_settings_widget.get_values()
 
         submitter.submit_job.assert_called_once_with(
             zip_file=zip_file,
