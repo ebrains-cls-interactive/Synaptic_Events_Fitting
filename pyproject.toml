@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "synaptic-events-fitting"
+name = "clsi-widgets"
 readme = "README.md"
-version = "0.1.0"
+version = "0.1.0a1"
 description = "Fitting synaptic events using data and model in NeuroInformatics Platform"
 license = { file = "LICENSE" }
 requires-python = ">=3.8"
@@ -46,15 +46,19 @@ neuron = [
     "neuron"
 ]
 
+tests = [
+    "pytest",
+]
+
 [project.urls]
 Homepage = "https://github.com/ebrains-cls-interactive/Synaptic_Events_Fitting"
 
 [tool.hatch.build.targets.wheel]
 include = [
-    "synapticwidgets/",
+    "clsiwidgets/",
 ]
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "synapticwidgets/",
+    "clsiwidgets/",
 ]
