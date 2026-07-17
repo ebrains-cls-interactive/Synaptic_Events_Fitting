@@ -46,7 +46,7 @@ neuron = [
     "neuron"
 ]
 
-tests = [
+test = [
     "pytest",
 ]
 

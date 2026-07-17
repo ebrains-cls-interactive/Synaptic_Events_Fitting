@@ -194,7 +194,6 @@ class AnalyzeSimulationResults(ipywidgets.VBox, BaseWidget):
                 prepare_best_fit_workspace(folder, self.best_fit_workspace_path)
 
                 best_fit = extract_best_fit_parameters(analysis["data"], analysis["names"], analysis["paramname"])
-                print(f"Best fit parameters: {best_fit}")
 
                 simulation_result = run_best_fit_simulation(
                     transfer_path=self.best_fit_workspace_path, data=analysis["data"], names=analysis["names"],

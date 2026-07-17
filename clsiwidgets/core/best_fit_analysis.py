@@ -214,7 +214,7 @@ def run_best_fit_simulation(transfer_path, data, names, best_fit, esynf, Vrestf,
 
         [sizeofsw, maxofsw, vec5, timevecS, cutsin] = fitness.finaltrace(trace_number=trace_number)
         parameters = vecparamsf
-        print("Best-fit parameters:")
+
         for name, value in zip(paramname, parameters):
             print(name, value)
 

@@ -85,9 +85,7 @@ class SASubmitter:
         )
 
         headers = self._get_service_account_headers(payload=True)
-        print("payload:", payload)
         r = requests.post(url=self._job_url(), headers=headers, json=payload, timeout=300)
-        print("create response:", r.status_code, r.text)
 
         if r.status_code != 201:
             raise RuntimeError(f"Service account job creation failed: {r.status_code} {r.text}")
@@ -103,7 +101,6 @@ class SASubmitter:
         with zip_file.open("rb") as fd:
             r = requests.patch(url=upload_url, headers=headers, data=fd.read(), timeout=300)
 
-        print("patch response:", r.status_code, r.text)
 
         if r.status_code >= 400:
             raise RuntimeError(f"Service account input upload failed: {r.status_code} {r.text}")
@@ -116,7 +113,7 @@ class SASubmitter:
         """
         headers = self._get_service_account_headers()
         r = requests.get(url=self._job_url(), headers=headers, params={'project': project}, timeout=360000)
-        print(f"requests: {r.url}; with headers: {r.headers}")
+
         if r.status_code != 200:
             raise RuntimeError(f"Service account jobs retrieval failed: {r.status_code} {r.content}")
         return r.json()
