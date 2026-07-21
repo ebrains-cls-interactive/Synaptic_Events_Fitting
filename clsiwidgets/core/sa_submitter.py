@@ -1,13 +1,19 @@
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from clsiwidgets.config import SERVICE_ACCOUNT_APP_KEY
 
 import requests
 
 @dataclass
 class SASubmitter:
     base_url: str = 'https://cls-sa.ebrains-italy.eu'
+
+    def __init__(self, app_key: str):
+        self.app_key = app_key.strip()
+        if not self.app_key:
+            raise ValueError(
+                "A Service Account Application Key is required."
+            )
 
     def _job_url(self):
         return f"{self.base_url}/job/"
@@ -17,7 +23,7 @@ class SASubmitter:
         Returns the Service Account headers to pass in the requests object.
         """
         token = self._retrieve_token()
-        headers = {'Authorization': 'Bearer ' + token, 'appkey': SERVICE_ACCOUNT_APP_KEY,}
+        headers = {'Authorization': 'Bearer ' + token, 'appkey': self.app_key,}
         if zip_name:
             content_type = ''
             if zip_name.endswith('.zip'):

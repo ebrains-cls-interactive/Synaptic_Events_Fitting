@@ -80,6 +80,18 @@ class RunWithSA(ipywidgets.VBox, BaseWidget):
         self._update_actions_state()
         super().__init__([self.title, info_box, actions_box, self.status_message, self.output], layout=self.DEFAULT_BORDER)
 
+    def _get_submitter(self):
+        context = self.context_widget.get_values()
+        app_key = context["app_key"]
+
+        if not app_key:
+            raise ValueError(
+                "Application Key is required. "
+                "Please enter it before using the Service Account."
+            )
+
+        return SASubmitter(app_key=app_key)
+
     def _update_actions_state(self, change=None):
         context = self.context_widget.get_values()
         has_project = bool(context["project"])
@@ -95,13 +107,14 @@ class RunWithSA(ipywidgets.VBox, BaseWidget):
             self.output.clear_output()
             self.status_message.value = ""
 
+            self._reset_service_account_state()
+            self._update_actions_state()
+
             try:
-                submitter = SASubmitter()
+                submitter = self._get_submitter()
                 projects = submitter.get_available_projects()
 
                 if not projects:
-                    self.context_widget.reset_projects()
-                    self._update_actions_state()
                     self._show_error("No Service Account projects were found.")
                     return
 
@@ -154,7 +167,7 @@ class RunWithSA(ipywidgets.VBox, BaseWidget):
                 self.job_settings_widget.zip_path.value = str(zip_file)
 
                 # 3. Submit via Service Account
-                submitter = SASubmitter()
+                submitter = self._get_submitter()
                 response = submitter.submit_job(
                     zip_file=zip_file,
                     settings=job_settings,
@@ -190,7 +203,7 @@ class RunWithSA(ipywidgets.VBox, BaseWidget):
             try:
                 context = self.context_widget.get_values()
 
-                submitter = SASubmitter()
+                submitter = self._get_submitter()
                 jobs = submitter.get_service_account_jobs(project=context["project"])
 
                 if not jobs:
@@ -231,7 +244,7 @@ class RunWithSA(ipywidgets.VBox, BaseWidget):
                 return
 
             try:
-                submitter = SASubmitter()
+                submitter = self._get_submitter()
                 context = self.context_widget.get_values()
                 job_info = submitter.get_service_account_job(self.current_job_id, self.current_remote_job_id,
                                                              context["project"],)
@@ -280,7 +293,7 @@ class RunWithSA(ipywidgets.VBox, BaseWidget):
             try:
                 context = self.context_widget.get_values()
                 print("dropdown value:", selected_job_id)
-                submitter = SASubmitter()
+                submitter = self._get_submitter()
                 job_info = submitter.get_service_account_job(selected_job_id, selected_remote_job_id, context["project"])
 
                 terminal = bool(job_info.get("terminal_stage"))
@@ -329,10 +342,23 @@ class RunWithSA(ipywidgets.VBox, BaseWidget):
     def _show_error(self, message):
         self.status_message.value = f"<span style='color: red;'>{message}</span>"
 
+    def _reset_service_account_state(self):
+        self.context_widget.reset_projects()
+        self.monitor_widget.reset_jobs()
+
+        self.current_job_id = None
+        self.current_remote_job_id = None
+        self.current_job_status = None
+
+        self.check_sim_button.disabled = True
+        self.sim_status.value = ""
+
     def _validate_inputs(self):
         context = self.context_widget.get_values()
         job_settings = self.job_settings_widget.get_values()
 
+        if not context["app_key"]:
+            return "Application Key is required. Please enter it and load the available projects."
         if not context["hpc"]:
             return "HPC is required."
         if not context["project"]:
