@@ -1,3 +1,4 @@
+from clsiwidgets.config import SERVICE_ACCOUNT_APP_KEY
 from clsiwidgets.ui.run_with_sa import RunWithSA
 from clsiwidgets.ui.sa_context_widget import SAContextWidget
 from clsiwidgets.ui.sa_monitor_widget import ServiceAccountMonitorWidget
@@ -8,6 +9,7 @@ def test_sa_context_widget():
 
     try:
         assert widget.get_values() == {
+            "app_key": SERVICE_ACCOUNT_APP_KEY,
             "hpc": "NSG",
             "project": None,
         }
@@ -19,8 +21,10 @@ def test_sa_context_widget():
         ]
         widget.project.disabled = False
         widget.project.value = "project-one"
+        widget.app_key.value = "test-app-key"
 
         assert widget.get_values() == {
+            "app_key": "test-app-key",
             "hpc": "NSG",
             "project": "project-one",
         }
@@ -100,6 +104,7 @@ def test_run_with_sa_submits_job_with_mocked_service(mocker, tmp_path):
         ]
         widget.context_widget.project.disabled = False
         widget.context_widget.project.value = "test-project"
+        widget.context_widget.app_key.value = "test-app-key"
 
         widget.job_settings_widget.tool_id.value = "TEST_TOOL"
         widget.job_settings_widget.job_name.value = "test-job"
@@ -121,7 +126,7 @@ def test_run_with_sa_submits_job_with_mocked_service(mocker, tmp_path):
         )
         package_builder.create_zip.assert_called_once_with()
 
-        submitter_class.assert_called_once_with()
+        submitter_class.assert_called_once_with(app_key="test-app-key")
 
         submitter.submit_job.assert_called_once_with(
             zip_file=zip_file,
