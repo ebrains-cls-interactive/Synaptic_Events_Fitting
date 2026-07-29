@@ -4,6 +4,8 @@
 
 The first workflow included in this package is the **Synaptic Events Fitting** widget. It supports fitting synaptic events using experimental data and computational models.
 
+For an overview of the workflow and its main concepts, see the previous Synaptic Events Fitting [documentation](https://ebrains-cls-interactive.github.io/docs/online_usecases/trace_analysis/syn_events_fit/syn_events_fit.html). Please note that some implementation details may differ from the current widget.
+
 Additional CLSI widgets and workflows will be added to this repository in future releases.
 
 ## Installation
