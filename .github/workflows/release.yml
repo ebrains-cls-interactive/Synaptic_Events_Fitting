@@ -1,0 +1,46 @@
+name: Create and release package
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build twine packaging
+          python -m pip install -e ".[test]"
+
+      - name: Check package import
+        run: |
+          python -c "from clsiwidgets.api import SynapticEventsFitting, RunOnNSG, RunWithSA, AnalyzeSimulationResults, prepare_workspace_environment; print('clsiwidgets public API import OK')"
+
+      - name: Run tests
+        run: |
+          python -m pytest clsiwidgets/tests -v
+
+      - name: Build package
+        run: python -m build
+
+      - name: Check package metadata
+        run: python -m twine check dist/*
+
+      - name: Release on Pypi
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USER }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASS }}
+        run: |
+          echo "Publishing on pypi..."
+          twine upload dist/*

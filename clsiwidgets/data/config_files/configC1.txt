@@ -1,0 +1,51 @@
+//name of file containing raw traces
+expC1.txt
+//name of mod file 
+ProbGABAAB_EMS_GEPH_g.mod
+//name of parameters file
+parametersC1.txt
+//flagdata==0 data with one time column for all currents; ==1 data with one time column for each current
+0
+//flagcut==0 data not cutted; ==1 data cutted below 20% of max
+1
+//number of traces
+207
+//PROTOCOL
+//VCLAMP AMP
+-70
+//REVERSAL POTENTIAL
+-17
+//FITTING PARAMETERS AND INITIAL VALUES
+11
+0 synapse.h 0.0083841002
+1 synapse.h1 0.17028999
+2 synapse.alphaf 0.0167
+3 synapse.alphab 0.011472 
+4 synapse.beta 23.580999
+5 synapse.tau_d_GABAA 4
+6 synapse.tau_r_GABAA 0.13
+7 synapse.phi 0.69999999
+8 netstim.start 0.2	
+9 synapse.geph 1
+10 netcon.weight[0] 0.6e-3
+//CONSTRAINTS
+1e-5 1e5
+1e-5 1e5
+1e-5 1e5
+1e-5 1e5
+1e-5 1e5
+3 20
+0.05 0.5
+1e-5 1e5
+0.01 5
+1e-5 1e5
+1e-8 1e-1
+//DEPENDENCY RULES FOR PARAMETERS NOT FITTED
+1
+synapse.nhalf=(synapse.geph)/2
+//EXCLUSION RULES
+1
+synapse.geph<synapse.nhalf*synapse.phi
+//seed
+1234567
+
