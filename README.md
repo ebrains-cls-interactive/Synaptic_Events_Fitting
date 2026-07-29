@@ -7,10 +7,10 @@ The first workflow included in this package is the **Synaptic Events Fitting** w
 Additional CLSI widgets and workflows will be added to this repository in future releases.
 
 ## Installation
-To install `clsi-widgets` from a local clone of the repository, run:
+To install `clsi-widgets` from a local clone of the repository in development mode, run:
 
 ```
-pip install -e .
+pip install -e ".[test]"
 ```
 
 To install the optional dependency required for local best-fit analysis with NEURON, run:

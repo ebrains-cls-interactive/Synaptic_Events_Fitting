@@ -8,7 +8,7 @@ readme = "README.md"
 version = "0.1.0a1"
 description = "Fitting synaptic events using data and model in NeuroInformatics Platform"
 license = { file = "LICENSE" }
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 classifiers = [
     "Framework :: Jupyter",
     "Framework :: Jupyter :: JupyterLab",
@@ -16,7 +16,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -28,7 +27,9 @@ dependencies = [
     "requests",
     "importlib_resources",
     "pytz",
+    "python-dateutil",
     "pandas",
+    "numpy",
     "plotly",
     "anywidget",
 ]
