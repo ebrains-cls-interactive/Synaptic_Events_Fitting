@@ -1,0 +1,54 @@
+{
+  "@context": "https://w3id.org/codemeta/3.0",
+  "@type": "SoftwareSourceCode",
+  "name": "clsi-widgets",
+  "description": "clsi-widgets is a collection of reusable interactive widgets developed for CLSI scientific workflows.\n\nThe first workflow included in this package is the Synaptic Events Fitting widget. It supports fitting synaptic events using experimental data and computational models.",
+  "author": [
+    {
+      "givenName": "Carmen Alina",
+      "familyName": "Lupascu",
+      "type": "Person",
+      "affiliation": {
+        "type": "Organization",
+        "name": "Consiglio Nazionale delle Ricerche (CNR)"
+      }
+    },
+    {
+      "givenName": "Roberto",
+      "familyName": "Smiriglia",
+      "type": "Person",
+      "affiliation": {
+        "type": "Organization",
+        "name": "Consiglio Nazionale delle Ricerche (CNR)"
+      }
+    },
+    {
+      "givenName": "Luca Leonardo",
+      "familyName": "Bologna",
+      "type": "Person",
+      "affiliation": {
+        "type": "Organization",
+        "name": "Consiglio Nazionale delle Ricerche (CNR)"
+      }
+    },
+        {
+      "givenName": "Maria Teodora",
+      "familyName": "Misan",
+      "type": "Person",
+      "affiliation": {
+        "type": "Organization",
+        "name": "Codemart"
+      }
+    }
+  ],
+  "license": [
+    "https://spdx.org/licenses/MIT"
+  ],
+  "version": "0.1.0a1",
+  "dateModified": "2026-07-29",
+  "codeRepository": "https://github.com/ebrains-cls-interactive/Synaptic_Events_Fitting",
+  "downloadUrl": "https://files.pythonhosted.org/packages/b0/61/5decdabed36fdab286442761b876dafc50503020da519d0457717781a5f6/clsi_widgets-0.1.0a1.tar.gz",
+  "relatedLink": [
+    "https://ebrains-cls-interactive.github.io/docs/online_usecases/trace_analysis/syn_events_fit/syn_events_fit.html"
+  ]
+}
